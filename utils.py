@@ -1,5 +1,5 @@
 import pickle
-import requests
+# import requests
 import zipfile
 import re
 
@@ -21,8 +21,11 @@ def load_obj(name):
     :param name: name of the pickle file
     :return: loaded pickle file
     """
-    with open(name + '.pkl', 'rb') as f:
-        return pickle.load(f)
+    try:
+        with open(name + '.pkl', 'rb') as f:
+            return pickle.load(f)
+    except:
+        return None
 
 
 __fid_ptrn = re.compile(
