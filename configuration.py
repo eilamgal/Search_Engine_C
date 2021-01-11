@@ -2,7 +2,7 @@ from glove import Glove
 
 
 class ConfigClass:
-    def __init__(self, corpus_path='data', use_glove=True):
+    def __init__(self, corpus_path='data', use_glove=True, use_thesaurus=False):
         # link to a zip file in google drive with your pretrained model
         self._model_url = None
         # False/True flag indicating whether the testing system will download 
@@ -23,12 +23,16 @@ class ConfigClass:
         # self.glove_dict = '../../../../glove.twitter.27B.25d.txt'
         self.glove_path = "glove.twitter.27B.25d.txt"
         self.use_glove = use_glove
+        self.use_thesaurus = use_thesaurus
         if self.use_glove:
             self.glove_dict = Glove(self.glove_path).embeddings_dict
+        if self.use_thesaurus:
+            from nltk.corpus import lin_thesaurus
+            self.thesaurus = lin_thesaurus
 
         # print('Project was created successfully..')
 
-    def __init__(self, corpus_path='', number_of_term_buckets=1, number_of_entities_buckets=1, output_path='', use_glove=True):
+    def __init__(self, corpus_path='', number_of_term_buckets=1, number_of_entities_buckets=1, output_path='', use_glove=True, use_thesaurus=False):
         self.number_of_term_buckets = number_of_term_buckets
         self.number_of_entities_buckets = number_of_entities_buckets
         self.first_entities_bucket_index = number_of_term_buckets
@@ -36,8 +40,13 @@ class ConfigClass:
         self.output_path = output_path
         self.glove_path = "glove.twitter.27B.25d.txt"
         self.use_glove = use_glove
+        self.use_thesaurus = use_thesaurus
         if self.use_glove:
             self.glove_dict = Glove(self.glove_path).embeddings_dict
+        if self.use_thesaurus:
+            from nltk.corpus import lin_thesaurus
+            self.thesaurus = lin_thesaurus
+            self.thesaurus.synonyms("read", fileid="simN.lsp")
         # self.saveFilesWithStem = self.savedFileMainFolder + "/WithStem"
         # self.saveFilesWithoutStem = self.savedFileMainFolder + "/WithoutStem"
         # print('Project was created successfully..')

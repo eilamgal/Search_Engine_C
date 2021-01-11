@@ -60,6 +60,8 @@ import math
 from numpy import dot
 from numpy.linalg import norm
 import numpy as np
+EXPANSION_THRESHOLD = 10000000
+EXPANSION_SIZE = 3
 
 
 def bm25(corpus_term_frequency, tweet_term_frequency, avg_tweet_length, tweet_length, corpus_size=10000000, k=1.4,
@@ -99,8 +101,11 @@ class Searcher:
         self.max_timestamp = tweet_dict["metadata"]["maxTimestamp"]
         self.config = config
         self.use_glove = self.config.use_glove
+        self.use_thesaurus = self.config.use_thesaurus
         if self.use_glove:
             self.glove_dict = self.config.glove_dict
+        if self.use_thesaurus:
+            self.thesaurus = self.config.thesaurus
 
     def relevant_docs_from_posting(self, query):
         """
@@ -108,7 +113,8 @@ class Searcher:
         :param query: query
         :return: dictionary of relevant documents.
         """
-
+        if self.use_thesaurus:
+            query.extend(self.query_expansion(query))
         query_vector = None
         if self.use_glove:
             query_vector = self.get_query_vector(query)
@@ -176,6 +182,23 @@ class Searcher:
             elif term in glove_dict.keys():
                 query_vector = query_vector + (1 / len(query)) * glove_dict[term.lower]
         return query_vector
+
+    def query_expansion(self, query):
+        expansion_terms = []
+        # TODO: we need to decide if we want to clean the expansion terms
+        for term in query:
+            if term not in self.inverted_index.keys():
+                if term.islower() and term.upper() in self.inverted_index.keys():
+                    term = term.upper()
+                elif term.isupper() and term.lower() in self.inverted_index.keys():
+                    term = term.lower()
+                else:
+                    expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
+                    continue
+            if self.inverted_index[term][0] < EXPANSION_THRESHOLD:
+                expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
+        return expansion_terms
+
 
 
 

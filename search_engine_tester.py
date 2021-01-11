@@ -1,5 +1,6 @@
 import time
 import sys
+from nltk.corpus import lin_thesaurus as thesaurus
 from reader import ReadFile
 from configuration import ConfigClass
 from parser_module import Parse
@@ -90,9 +91,9 @@ def search_and_rank_query(query, inverted_index, k, config=None, tweet_dict=None
 
 
 def main(corpus_path="data", output_path="posting", stemming=True, queries='', num_docs_to_retrieve=10,
-         index_corpus=False, query_engine=True, glove=False):
+         index_corpus=False, query_engine=True, glove=False, thesaurus=False):
 
-    config = ConfigClass(corpus_path, use_glove=glove)
+    config = ConfigClass(corpus_path, use_glove=glove, use_thesaurus=thesaurus)
 
     # glove_dict = GloveStrategy("glove.twitter.27B.25d.txt").embeddings_dict  # *LOCAL RUN*
     # glove_dict = GloveStrategy("../../../../glove.twitter.27B.25d.txt").embeddings_dict  # *SUBMISSION SYS RUN*
