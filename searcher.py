@@ -187,6 +187,10 @@ class Searcher:
         expansion_terms = []
         # TODO: we need to decide if we want to clean the expansion terms
         for term in query:
+            in_index, term = self.__query_term_in_index_check(term)
+            if not in_index or self.inverted_index[term][0] < EXPANSION_THRESHOLD:
+                expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
+            """    
             if term not in self.inverted_index.keys():
                 if term.islower() and term.upper() in self.inverted_index.keys():
                     term = term.upper()
@@ -197,7 +201,21 @@ class Searcher:
                     continue
             if self.inverted_index[term][0] < EXPANSION_THRESHOLD:
                 expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
+            """
         return expansion_terms
+
+    def __query_term_in_index_check(self, term):
+        in_index = True
+        term_in_index = term
+        if term not in self.inverted_index.keys():
+            if term.islower() and term.upper() in self.inverted_index.keys():
+                term = term.upper()
+            elif term.isupper() and term.lower() in self.inverted_index.keys():
+                term = term.lower()
+            else:
+                in_index = False
+        return in_index, term_in_index
+
 
 
 
