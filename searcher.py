@@ -1,58 +1,4 @@
-# from ranker import Ranker
-# import utils
-#
-#
-# # DO NOT MODIFY CLASS NAME
-# class Searcher:
-#     # DO NOT MODIFY THIS SIGNATURE
-#     # You can change the internal implementation as you see fit. The model
-#     # parameter allows you to pass in a precomputed model that is already in
-#     # memory for the searcher to use such as LSI, LDA, Word2vec models.
-#     # MAKE SURE YOU DON'T LOAD A MODEL INTO MEMORY HERE AS THIS IS RUN AT QUERY TIME.
-#     def __init__(self, parser, indexer, model=None):
-#         self._parser = parser
-#         self._indexer = indexer
-#         self._ranker = Ranker()
-#         self._model = model
-#
-#     # DO NOT MODIFY THIS SIGNATURE
-#     # You can change the internal implementation as you see fit.
-#     def search(self, query, k=None):
-#         """
-#         Executes a query over an existing index and returns the number of
-#         relevant docs and an ordered list of search results (tweet ids).
-#         Input:
-#             query - string.
-#             k - number of top results to return, default to everything.
-#         Output:
-#             A tuple containing the number of relevant search results, and
-#             a list of tweet_ids where the first element is the most relavant
-#             and the last is the least relevant result.
-#         """
-#         query_as_list = self._parser.parse_sentence(query)
-#
-#         relevant_docs = self._relevant_docs_from_posting(query_as_list)
-#         n_relevant = len(relevant_docs)
-#         ranked_doc_ids = Ranker.rank_relevant_docs(relevant_docs)
-#         return n_relevant, ranked_doc_ids
-#
-#     # feel free to change the signature and/or implementation of this function
-#     # or drop altogether.
-#     def _relevant_docs_from_posting(self, query_as_list):
-#         """
-#         This function loads the posting list and count the amount of relevant documents per term.
-#         :param query_as_list: parsed query tokens
-#         :return: dictionary of relevant documents mapping doc_id to document frequency.
-#         """
-#         relevant_docs = {}
-#         for term in query_as_list:
-#             posting_list = self._indexer.get_term_posting_list(term)
-#             for doc_id, tf in posting_list:
-#                 df = relevant_docs.get(doc_id, 0)
-#                 relevant_docs[doc_id] = df + 1
-#         return relevant_docs
-
-
+from ranker import Ranker
 from parser_module import Parse
 from ranker import Ranker
 import utils
@@ -85,21 +31,28 @@ def euclidean_distance(vector1, vector2):
     return np.norn(vector1, vector2)
 
 
+# # DO NOT MODIFY CLASS NAME
 class Searcher:
-
-    def __init__(self, inverted_index, tweet_dict, config=None):
-        """
-        :param inverted_index: dictionary of inverted index
-        """
+    # DO NOT MODIFY THIS SIGNATURE
+    # You can change the internal implementation as you see fit. The model
+    # parameter allows you to pass in a precomputed model that is already in
+    # memory for the searcher to use such as LSI, LDA, Word2vec models.
+    # MAKE SURE YOU DON'T LOAD A MODEL INTO MEMORY HERE AS THIS IS RUN AT QUERY TIME.
+    def __init__(self, parser, indexer, model=None):
+        self._parser = parser
+        self._indexer = indexer
+        self._ranker = Ranker()
+        self._model = model
         self.parser = Parse()
         self.ranker = Ranker()
-        self.inverted_index = inverted_index
-        self.tweet_dict = tweet_dict
-        self.avg_tweet_length = tweet_dict["metadata"]["avgLength"]
-        self.max_referrals = tweet_dict["metadata"]["maxReferrals"]
-        self.min_timestamp = tweet_dict["metadata"]["minTimestamp"]
-        self.max_timestamp = tweet_dict["metadata"]["maxTimestamp"]
-        self.config = config
+        self.inverted_index = indexer.load_index("inverted_index")
+        self.config = indexer.config
+        if self.config.glove_dict:
+            self.tweet_dict = indexer.load_tweet_dict()
+            self.avg_tweet_length = self.tweet_dict["metadata"]["avgLength"]
+            self.max_referrals = self.tweet_dict["metadata"]["maxReferrals"]
+            self.min_timestamp = self.tweet_dict["metadata"]["minTimestamp"]
+            self.max_timestamp = self.tweet_dict["metadata"]["maxTimestamp"]
         self.use_glove = self.config.use_glove
         self.use_thesaurus = self.config.use_thesaurus
         if self.use_glove:
@@ -107,6 +60,31 @@ class Searcher:
         if self.use_thesaurus:
             self.thesaurus = self.config.thesaurus
 
+    # DO NOT MODIFY THIS SIGNATURE
+    # You can change the internal implementation as you see fit.
+    def search(self, query, k=None):
+        """
+         Executes a query over an existing index and returns the number of
+         relevant docs and an ordered list of search results (tweet ids).
+         Input:
+             query - string.
+             k - number of top results to return, default to everything.
+         Output:
+             A tuple containing the number of relevant search results, and
+             a list of tweet_ids where the first element is the most relavant
+             and the last is the least relevant result.
+        """
+        query_as_list, entities = self._parser.parse_sentence(query)
+        full_query = query_as_list + entities
+        relevant_docs = self._relevant_docs_from_posting(full_query)
+        n_relevant = len(relevant_docs)
+        ranked_doc_ids = Ranker.rank_relevant_docs(relevant_docs)
+        if k:
+            ranked_doc_ids = ranked_doc_ids[0:min(n_relevant, k)]
+        return n_relevant, ranked_doc_ids
+
+    # feel free to change the signature and/or implementation of this function
+    # or drop altogether.
     def relevant_docs_from_posting(self, query):
         """
         This function loads the posting list and count the amount of relevant documents per term.
@@ -185,36 +163,17 @@ class Searcher:
 
     def query_expansion(self, query):
         expansion_terms = []
-        # TODO: we need to decide if we want to clean the expansion terms
         for term in query:
-            in_index, term = self.__query_term_in_index_check(term)
-            if not in_index or self.inverted_index[term][0] < EXPANSION_THRESHOLD:
-                expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
-            """    
-            if term not in self.inverted_index.keys():
-                if term.islower() and term.upper() in self.inverted_index.keys():
-                    term = term.upper()
-                elif term.isupper() and term.lower() in self.inverted_index.keys():
-                    term = term.lower()
-                else:
-                    expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
-                    continue
-            if self.inverted_index[term][0] < EXPANSION_THRESHOLD:
-                expansion_terms.extend(list(self.thesaurus.synonyms(term, fileid="simN.lsp"))[0:EXPANSION_SIZE])
-            """
+            expansion_vectors = self.thesaurus.synonyms(term)
+            # adds adjectives
+            expansion_terms.extend(list(expansion_vectors[0][1])[0:min(len(expansion_vectors[0][1]), EXPANSION_SIZE)])
+            # adds vawals
+            expansion_terms.extend(list(expansion_vectors[1][1])[0:min(len(expansion_vectors[1][1]), EXPANSION_SIZE)])
+            # adds all the
+            expansion_terms.extend(list(expansion_vectors[2][1])[0:min(len(expansion_vectors[2][1]), EXPANSION_SIZE)])
         return expansion_terms
 
-    def __query_term_in_index_check(self, term):
-        in_index = True
-        term_in_index = term
-        if term not in self.inverted_index.keys():
-            if term.islower() and term.upper() in self.inverted_index.keys():
-                term = term.upper()
-            elif term.isupper() and term.lower() in self.inverted_index.keys():
-                term = term.lower()
-            else:
-                in_index = False
-        return in_index, term_in_index
+
 
 
 

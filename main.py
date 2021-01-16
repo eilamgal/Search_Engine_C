@@ -5,4 +5,4 @@ import search_engine_tester
 
 if __name__ == '__main__':
     # search_engine_best.main()
-    search_engine_tester.main(index_corpus=False,glove=False, thesaurus=True)
+    search_engine_tester.main(index_corpus=True,glove=True, thesaurus=True)

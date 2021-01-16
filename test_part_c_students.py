@@ -69,6 +69,7 @@ if __name__ == '__main__':
         
         # do we need to download a pretrained model?
         model_url = config.get_model_url()
+        # model_url = None
         if model_url is not None and config.get_download_model():
             import utils
             dest_path = 'model.zip'
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                 logging.error('model.zip file does not exists.')
 
         # test for each search engine module
-        engine_modules = ['search_engine_' + name for name in ['1', '2', 'best']]
+        engine_modules = ['search_engine_' + name for name in ['1', '2', 'best']]  #  'best', '2', 'tester'
         for engine_module in engine_modules:
             try:
                 # does the module file exist?
@@ -194,10 +195,12 @@ if __name__ == '__main__':
                         logging.error(f'idx_bench.pkl cannot be found in the current directory or under {model_dir}.')
 
             except Exception as e:
+                raise e
                 logging.error(f'The following error occured while testing the module {engine_module}.')
                 logging.error(e, exc_info=True)
 
     except Exception as e:
+        raise e
         logging.error(e, exc_info=True)
 
     run_time = datetime.now() - start

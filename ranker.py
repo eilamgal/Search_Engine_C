@@ -1,7 +1,7 @@
-GLOVE_WEIGHT = 0.3
-BM25_WEIGHT = 0.2
-REFERRAL_WEIGHT = 0.3
-RELEVANCE_WEIGHT = 0.2
+GLOVE_WEIGHT = 1
+BM25_WEIGHT = 0.25
+REFERRAL_WEIGHT = 0
+RELEVANCE_WEIGHT = 0
 
 
 class Ranker:
@@ -16,10 +16,10 @@ class Ranker:
         :param relevant_doc: dictionary of documents that contains at least one term from the query.
         :return: sorted list of documents by score
         """
-        return sorted(relevant_doc.items(), key=lambda item:   GLOVE_WEIGHT*item[1][0]
-                                                             + BM25_WEIGHT*item[1][1]
-                                                             + REFERRAL_WEIGHT*item[1][2]
-                                                             + RELEVANCE_WEIGHT*item[1][3], reverse=True)
+        return sorted(relevant_doc.keys(), key=lambda key:   GLOVE_WEIGHT*relevant_doc[key][0]
+                                                             + BM25_WEIGHT*relevant_doc[key][1]
+                                                             + REFERRAL_WEIGHT*relevant_doc[key][2]
+                                                             + RELEVANCE_WEIGHT*relevant_doc[key][3], reverse=True)
 
     @staticmethod
     def retrieve_top_k(sorted_relevant_doc, k=1):

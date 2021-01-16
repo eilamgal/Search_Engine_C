@@ -95,6 +95,47 @@ class Indexer:
                     self.referrals_counter[referral] += 1
                     self.max_referrals = max(self.referrals_counter[referral], self.max_referrals)
 
+    # DO NOT MODIFY THIS SIGNATURE
+    # You can change the internal implementation as you see fit.
+    def load_index(self, fn):
+        """
+        Loads a pre-computed index (or indices) so we can answer queries.
+        Input:
+            fn - file name of pickled index.
+        """
+        inverted_index = utils.load_obj(fn)
+        return inverted_index
+
+    # DO NOT MODIFY THIS SIGNATURE
+    # You can change the internal implementation as you see fit.
+    def save_index(self, fn):
+        """
+        Saves a pre-computed index (or indices) so we can save our work.
+        Input:
+              fn - file name of pickled index.
+        """
+        try:
+            self.finish_indexing()
+        except:
+            print("problem finish indexing")
+
+    def load_tweet_dict(self):
+        """
+        read the tweet vector files and insert the vectors to the tweet dictionary
+        :return tweet_Dictionary including the Glove vector data
+        """
+        tweet_dict = utils.load_obj("docDictionary")
+        if self.config.use_glove:
+            tweet_vectors = []
+            for i in range(tweet_dict["metadata"]["tweet_vector_buckets"]):
+                tweet_vectors.append(utils.load_obj("avgVector" + str(i)))
+            for tweet_id in tweet_dict.keys():
+                if tweet_id == "metadata":
+                    continue
+                address = tweet_dict[tweet_id][5]
+                tweet_dict[tweet_id][5] = tweet_vectors[address[0]][address[1]]
+        return tweet_dict
+
     def finish_indexing(self):
         """
         Dump the remaining buckets from the memory and save the final inverted index, tweets dictionary and all of the
@@ -121,8 +162,8 @@ class Indexer:
         for entity in self.entities_inverted_idx.keys():
             if self.entities_inverted_idx[entity][0] > 1:
                 self.inverted_idx[entity] = self.entities_inverted_idx[entity]
-
         self.entities_posting_handler.finish_indexing(self.entities_inverted_idx)
+        self.files_union()
         self.entities_inverted_idx.clear()
 
     def __update_referrals(self):
@@ -143,5 +184,15 @@ class Indexer:
                                           "avgLength": self.avg_tweet_length,
                                           "maxReferrals": self.max_referrals,
                                           "tweet_vector_buckets": self.tweet_vectors_handler.last_bucket_index}
+
+    def files_union(self):
+        posting = utils.load_obj("bucket" + str(0))
+        entities_posting = utils.load_obj("bucket" + str(1))
+        for entity in self.entities_inverted_idx.keys():
+            if self.entities_inverted_idx[entity][0] > 1:
+                posting.append(entities_posting[self.entities_inverted_idx[entity][1][1]])
+                self.inverted_idx[entity][1]=(0, len(posting)-1)
+        utils.save_obj(posting, "bucket" + str(0))
+
 
 
