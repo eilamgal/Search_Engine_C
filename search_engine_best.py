@@ -36,17 +36,13 @@ class SearchEngine:
         r = ReadFile(corpus_path="Data")
         p = Parse(self._config.stemming)
         indexer = Indexer(self._config)
-        all_files_paths = glob.glob("Data" + "\\*\\*.snappy.parquet")
-        all_files_paths.extend(glob.glob("Data" + "\\*.snappy.parquet"))
-        all_files_names = [file_name[file_name.find("\\") + 1:] for file_name in all_files_paths]
-        for file_name in all_files_names:
-            documents_list = [document for document in r.read_file(file_name=file_name)]
-            # Iterate over every document in the file
-            for idx, document in enumerate(documents_list):
-                parsed_document = p.parse_doc(document)
-                indexer.add_new_doc(parsed_document)
+        documents_list = [document for document in r.read_file(file_name=fn, just_name=False)]
+        for idx, document in enumerate(documents_list):
+            parsed_document = p.parse_doc(document)
+            indexer.add_new_doc(parsed_document)
         indexer.finish_indexing()
         print('Finished parsing and indexing.')
+
 
     # DO NOT MODIFY THIS SIGNATURE
     # You can change the internal implementation as you see fit.
