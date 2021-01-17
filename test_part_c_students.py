@@ -150,33 +150,6 @@ if __name__ == '__main__':
                                       if metrics.recall_single(q_results_labeled, rel, q_id) == 0]
                     if len(zero_recall_qs) > 0:
                         logging.warning(f"{engine_module}'s recall for the following queries was zero {zero_recall_qs}.")
-
-                # me
-                import pandas
-                df = pandas.DataFrame()
-                query = []
-                precision = []
-                precision_at_5 = []
-                precision_at_10 = []
-                precision_at_50 = []
-                recall = []
-                for i in range(1,36):
-                    query.append(i)
-                    precision.append(metrics.precision(q_results_labeled, True, i))
-                    precision_at_5.append(metrics.precision_at_n(q_results_labeled, i, 5))
-                    precision_at_10.append(metrics.precision_at_n(q_results_labeled, i, 10))
-                    precision_at_50.append(metrics.precision_at_n(q_results_labeled, i, 50))
-                    dict = {}
-                    dict[i] = q2n_relevant[i]
-                    recall.append(metrics.recall(q_results_labeled, dict))
-                df['query'] = query
-                df['precision'] = precision
-                df['precision_at_5'] = precision_at_5
-                df['precision_at_10'] = precision_at_10
-                df['precision_at_50'] = precision_at_50
-                df['recall'] = recall
-                df.to_csv(engine_module+".csv", index=False)
-                # me
                 if q_results_labeled is not None:
                     # test that MAP > 0
                     results_map = metrics.map(q_results_labeled)
