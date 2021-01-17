@@ -3,6 +3,7 @@ import utils
 
 MAX_SIZE = 10000000
 THRESHOLD = 200000
+SPLIT_SIZE = 100
 abc_frequency_dict = {'a': 1.7, 'b': 4.4, 'c': 5.2, 'd': 3.2, 'e': 2.8, 'f': 4, 'g': 1.6, 'h': 4.2, 'i': 7.3, 'j': 7.3,
                       'k': 0.86, 'l': 2.4, 'm': 3.8, 'n': 2.3, 'o': 7.6, 'p': 4.3, 'q': 0.22, 'r': 2.8, 's': 6.7,
                       't': 16, 'u': 1.2, 'v': 0.82, 'w': 5.5, 'x': 0.045, 'y': 0.76, 'z': 0.045}
@@ -96,4 +97,30 @@ class PostingsHandler:
             if self.buckets[i].get_size != 0:
                 self.__flush_bucket(inverted_idx, i)
 
+    def split_postings(self, inverted_idx):  # split the posting files after the building
+        buckets = {}
+        for entry in inverted_idx.items():
+            if not entry[1][1][0] in buckets.keys():
+                buckets[entry[1][1][0]] = []
+            buckets[entry[1][1][0]].append(entry[0])
+        for bucket in buckets.items():
+            self.__split_bucket(bucket, inverted_idx)
 
+    def __split_bucket(self, bucket, inverted_index):  # split file
+        self.buckets
+        posting = utils.load_obj("bucket" + str(bucket[0]))
+        counter = 0
+        new_posting = []
+        split_index = 0
+        for term in bucket[1]:
+            if counter == 0:
+                new_posting = []
+                new_posting_index = str(inverted_index[term][1][0]) + "." + str(split_index)
+                split_index += 1
+            new_posting.append(posting[inverted_index[term][1][1]])
+            inverted_index[term][1] = (new_posting_index, len(new_posting) - 1)
+            counter += 1
+            if counter == SPLIT_SIZE:
+                counter = 0
+                utils.save_obj(new_posting, "bucket" + new_posting_index)
+        utils.save_obj(new_posting, "bucket" + new_posting_index)

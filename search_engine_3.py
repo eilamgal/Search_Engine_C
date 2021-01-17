@@ -8,7 +8,6 @@ import utils
 import glob
 import ranker
 
-
 # DO NOT CHANGE THE CLASS NAME
 class SearchEngine:
 
@@ -16,8 +15,8 @@ class SearchEngine:
     # You can change the internal implementation, but you must have a parser and an indexer.
     def __init__(self, config=None):
         self._config = config
+        self._config.use_glove = False
         self._config.use_thesaurus = False
-        self._config.use_glove = True
         self._parser = Parse()
         self._indexer = Indexer(config)
         self._inverted_index = None
@@ -86,7 +85,7 @@ class SearchEngine:
         query_as_list, entities = self._parser.parse_text(query)
         full_query = query_as_list + entities
         searcher = Searcher(self._parser, self._indexer, self._config)
-        searcher.ranker = ranker.Ranker(0.9, 0, 0.05, 0.05)
+        searcher.ranker = ranker.Ranker(0, 0.9, 0.05, 0.05)
         relevant_docs = searcher.relevant_docs_from_posting(full_query)
         ranked_docs = searcher.ranker.rank_relevant_doc(relevant_docs)
         retrieve_list = searcher.ranker.retrieve_top_k(ranked_docs, k)

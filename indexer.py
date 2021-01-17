@@ -146,7 +146,7 @@ class Indexer:
         self.__check_entities()
         self.inverted_idx.update(self.entities_inverted_idx)
         self.__update_referrals()
-
+        # self.posting_handler.split_postings(self.inverted_idx)
         if self.use_glove:
             self.tweet_vectors_handler.finish_indexing(self.document_dict)
 
@@ -193,6 +193,5 @@ class Indexer:
                 posting.append(entities_posting[self.entities_inverted_idx[entity][1][1]])
                 self.inverted_idx[entity][1]=(0, len(posting)-1)
         utils.save_obj(posting, "bucket" + str(0))
-
 
 

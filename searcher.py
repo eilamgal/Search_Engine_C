@@ -6,7 +6,6 @@ import math
 from numpy import dot
 from numpy.linalg import norm
 import numpy as np
-EXPANSION_THRESHOLD = 10000000
 EXPANSION_SIZE = 3
 
 
@@ -38,7 +37,7 @@ class Searcher:
     # parameter allows you to pass in a precomputed model that is already in
     # memory for the searcher to use such as LSI, LDA, Word2vec models.
     # MAKE SURE YOU DON'T LOAD A MODEL INTO MEMORY HERE AS THIS IS RUN AT QUERY TIME.
-    def __init__(self, parser, indexer, model=None):
+    def __init__(self, parser, indexer, model=None, one_posting=True):
         self._parser = parser
         self._indexer = indexer
         self._ranker = Ranker()
@@ -47,6 +46,7 @@ class Searcher:
         self.ranker = Ranker()
         self.inverted_index = indexer.load_index("inverted_index")
         self.config = indexer.config
+        self.one_posting = one_posting
         if self.config.glove_dict:
             self.tweet_dict = indexer.load_tweet_dict()
             self.avg_tweet_length = self.tweet_dict["metadata"]["avgLength"]
@@ -103,6 +103,8 @@ class Searcher:
         self.get_buckets_dictionary(buckets, query)
         # for each bucket read and go over all the posting list of terms in this bucket
         for bucket in buckets.keys():
+            # if not self.one_posting or self.bu:
+
             posting = utils.load_obj("bucket" + str(bucket))
             for term in buckets[bucket]:
                 if term not in self.inverted_index.keys():
@@ -167,9 +169,9 @@ class Searcher:
             expansion_vectors = self.thesaurus.synonyms(term)
             # adds adjectives
             expansion_terms.extend(list(expansion_vectors[0][1])[0:min(len(expansion_vectors[0][1]), EXPANSION_SIZE)])
-            # adds vawals
+            # adds vowels
             expansion_terms.extend(list(expansion_vectors[1][1])[0:min(len(expansion_vectors[1][1]), EXPANSION_SIZE)])
-            # adds all the
+            # adds nouns
             expansion_terms.extend(list(expansion_vectors[2][1])[0:min(len(expansion_vectors[2][1]), EXPANSION_SIZE)])
         return expansion_terms
 

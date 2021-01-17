@@ -2,36 +2,6 @@ from glove import Glove
 
 
 class ConfigClass:
-    def __init__(self, corpus_path='data', use_glove=True, use_thesaurus=False):
-        # link to a zip file in google drive with your pretrained model
-        self._model_url = None
-        # False/True flag indicating whether the testing system will download 
-        # and overwrite the existing model files. In other words, keep this as 
-        # False until you update the model, submit with True to download 
-        # the updated model (with a valid model_url), then turn back to False 
-        # in subsequent submissions to avoid the slow downloading of the large 
-        # model file with every submission.
-        self._download_model = False
-        self._model_dir = None
-
-        self.corpusPath = corpus_path
-        self.savedFileMainFolder = ''
-        self.saveFilesWithStem = self.savedFileMainFolder + "/WithStem"
-        self.saveFilesWithoutStem = self.savedFileMainFolder + "/WithoutStem"
-        self.toStem = False
-        self.google_news_vectors_negative300_path = '../../../../GoogleNews-vectors-negative300.bin'
-        # self.glove_dict = '../../../../glove.twitter.27B.25d.txt'
-        self.glove_path = "glove.twitter.27B.25d.txt"
-        self.use_glove = use_glove
-        self.use_thesaurus = use_thesaurus
-        if self.use_glove:
-            self.glove_dict = Glove(self.glove_path).embeddings_dict
-        if self.use_thesaurus:
-            from nltk.corpus import lin_thesaurus
-            self.thesaurus = lin_thesaurus
-
-        # print('Project was created successfully..')
-
     def __init__(self, corpus_path='', number_of_term_buckets=1, number_of_entities_buckets=1, output_path='', use_glove=True, use_thesaurus=True, stemming=True):
         self.number_of_term_buckets = number_of_term_buckets
         self.number_of_entities_buckets = number_of_entities_buckets
